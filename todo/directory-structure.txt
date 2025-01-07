@@ -1,0 +1,101 @@
+src/
+├── api/                         # API-related utilities
+│   ├── axiosInstance.ts          # Pre-configured Axios instance
+│   ├── authApi.ts                # Authentication API calls
+│   ├── transactionApi.ts         # Other feature-specific APIs
+│   └── ...                       # Additional API files
+│
+├── assets/                      # Static assets (images, fonts, etc.)
+│   ├── images/
+│   ├── fonts/
+│   └── svgs/
+│
+├── components/                  # Reusable UI components
+│   ├── common/                   # General-purpose components
+│   │   ├── Button.tsx
+│   │   ├── Input.tsx
+│   │   └── Modal.tsx
+│   │
+│   ├── network/                  # Network-related components
+│   │   └── NoInternetBanner.tsx
+│   │
+│   ├── layout/                   # Layout components (Header, Footer)
+│   │   ├── Header.tsx
+│   │   └── Footer.tsx
+│   │
+│   └── ...                       # Additional reusable components
+│
+├── contexts/                    # Context API files (if any)
+│   ├── AuthContext.tsx           # Authentication context
+│   ├── NetworkContext.tsx        # Network context
+│   └── ...                       # Other contexts
+│
+├── hooks/                       # Custom hooks
+│   ├── useAuth.ts                # Authentication-related hooks
+│   ├── useNetworkStatus.ts       # Network status hook
+│   ├── useTheme.ts               # Dynamic theming hook
+│   └── ...                       # Additional hooks
+│
+├── navigation/                  # App navigation
+│   ├── AppNavigator.tsx          # Main navigator
+│   ├── AuthNavigator.tsx         # Authentication stack
+│   ├── TabNavigator.tsx          # Tab-based navigation
+│   └── utils.ts                  # Navigation utilities
+│
+├── screens/                     # Feature screens
+│   ├── Auth/                     # Authentication-related screens
+│   │   ├── LoginScreen.tsx
+│   │   ├── RegisterScreen.tsx
+│   │   └── ForgotPasswordScreen.tsx
+│   │
+│   ├── Home/                     # Home screen and related screens
+│   │   ├── HomeScreen.tsx
+│   │   ├── DashboardScreen.tsx
+│   │   └── ProfileScreen.tsx
+│   │
+│   ├── Transactions/             # Transaction screens
+│   │   ├── TransactionListScreen.tsx
+│   │   └── TransactionDetailScreen.tsx
+│   │
+│   └── ...                       # Other screens
+│
+├── store/                       # State management (Zustand and RTK)
+│   ├── zustand/                  # Zustand-specific stores
+│   │   ├── authStore.ts           # Authentication state (Zustand)
+│   │   ├── networkStore.ts        # Network state (Zustand)
+│   │   └── ...                    # Other Zustand stores
+│   │
+│   ├── rtk/                      # Redux Toolkit setup (future-ready)
+│   │   ├── store.ts               # Main RTK store
+│   │   ├── slices/                # RTK slices
+│   │   │   ├── authSlice.ts
+│   │   │   ├── transactionSlice.ts
+│   │   │   └── ...                # Additional slices
+│   │   └── middleware/            # Custom RTK middleware
+│   │       ├── loggerMiddleware.ts
+│   │       └── ...                # Other middleware
+│   │
+│   └── index.ts                  # Single entry for Zustand/RTK state
+│
+├── services/                    # Service integrations
+|   ├── KeychainService.ts        # Handles all react-native-keychain logic
+│   ├── PushNotificationService.ts # Push notifications
+│   ├── LocationService.ts         # Location tracking
+│   └── ...                        # Additional services
+│
+├── styles/                      # Global styles
+│   ├── colors.ts                 # Centralized color palette
+│   ├── spacing.ts                # Spacing values
+│   ├── typography.ts             # Font styles
+│   ├── themes.ts                 # Light/dark mode themes
+│   └── globalStyles.ts           # Global reusable styles
+│
+├── utils/                       # General utilities
+│   ├── formatDate.ts             # Date formatting
+│   ├── validateInput.ts          # Input validation
+│   ├── storage.ts                # AsyncStorage helpers
+│   └── ...                       # Additional utilities
+│
+├── App.tsx                      # Root component
+├── index.tsx                    # Entry point
+└── theme.d.ts                   # TypeScript types for theming

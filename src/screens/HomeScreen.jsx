@@ -114,13 +114,23 @@
 
 // export default HomeScreen;
 
+// HomeScreen.jsx
 import React, {useEffect, useState} from 'react';
-import {View, Button, Text, StyleSheet} from 'react-native';
+import {
+  View,
+  Button,
+  Text,
+  StyleSheet,
+  TouchableHighlight,
+  TouchableOpacity,
+} from 'react-native';
 import axios from 'axios';
 import useAuthStore from '../store/authStore';
 import {API_URL} from '../utils/config';
+import {API_ENDPOINTS} from '../constants/apiEndpoints';
+import {ROUTES} from '../constants/route';
 
-const HomeScreen = () => {
+const HomeScreen = ({navigation}) => {
   const {deleteToken, token} = useAuthStore(); // Assuming you have a token in your store
   const [user, setUser] = useState(null); // Store user details
   const [loading, setLoading] = useState(false); // Track loading state
@@ -135,7 +145,7 @@ const HomeScreen = () => {
 
       setLoading(true); // Start loading
       try {
-        const response = await axios.get(`${API_URL}/user`, {
+        const response = await axios.get(`${API_URL}${API_ENDPOINTS.USER}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -158,7 +168,7 @@ const HomeScreen = () => {
       // Send logout request to server to delete token
       if (token) {
         await axios.post(
-          `${API_URL}/logout`,
+          `${API_URL}${API_ENDPOINTS.LOGOUT}`,
           {},
           {
             headers: {
@@ -182,6 +192,9 @@ const HomeScreen = () => {
       {error && <Text style={styles.errorText}>{error}</Text>}
       {/* Show error if any */}
       {/* Display user details if available */}
+
+      <Button title="Logout" onPress={handleLogout} />
+
       {user ? (
         <View style={styles.userDetailsContainer}>
           <Text style={styles.userDetailText}>Name: {user.name}</Text>
@@ -190,9 +203,14 @@ const HomeScreen = () => {
       ) : (
         <Text>No user data available</Text>
       )}
-      <View style={{width: '100%'}}>
-        <Button title="Logout" onPress={handleLogout} />
-      </View>
+
+      <TouchableOpacity
+        style={styles.btn}
+        onPress={() => {
+          navigation.navigate(ROUTES.settings);
+        }}>
+        <Text style={styles.btnText}>Settings</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -200,7 +218,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
   },
@@ -215,6 +233,18 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 14,
     marginBottom: 20,
+  },
+
+  btnText: {
+    backgroundColor: '#007BFF',
+    padding: 10,
+    borderRadius: 5,
+    marginVertical: 10,
+    fontSize: 18,
+    color: '#fff',
+    width: '100%',
+    paddingHorizontal: 40,
+    textAlign: 'center',
   },
 });
 

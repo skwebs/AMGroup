@@ -92,7 +92,7 @@
 
 //         {/* Login Link */}
 //         <TouchableOpacity onPress={() => navigation.goBack()}>
-//           <Text style={styles.loginText}>Already have an account? Login</Text>
+//           <Text style={styles.linkText}>Already have an account? Login</Text>
 //         </TouchableOpacity>
 //       </KeyboardAvoidingView>
 //     </ScrollView>
@@ -151,7 +151,7 @@
 //     color: '#fff',
 //     fontWeight: 'bold',
 //   },
-//   loginText: {
+//   linkText: {
 //     textAlign: 'center',
 //     marginTop: 20,
 //     color: '#4CAF50',
@@ -241,7 +241,7 @@
 
 //             {/* Login Link */}
 //             <TouchableWithoutFeedback onPress={() => navigation.goBack()}>
-//               <Text style={styles.loginText}>
+//               <Text style={styles.linkText}>
 //                 Already have an account? Login
 //               </Text>
 //             </TouchableWithoutFeedback>
@@ -294,7 +294,7 @@
 //     marginTop: 20,
 //     borderRadius: 5,
 //   },
-//   loginText: {
+//   linkText: {
 //     textAlign: 'center',
 //     marginTop: 40,
 //     color: '#4CAF50',
@@ -460,7 +460,7 @@
 
 //       {/* Login Link */}
 //       <TouchableWithoutFeedback onPress={() => navigation.navigate('LOGIN')}>
-//         <Text style={styles.loginText}>Already have an account? Login</Text>
+//         <Text style={styles.linkText}>Already have an account? Login</Text>
 //       </TouchableWithoutFeedback>
 
 //       {/* Snackbar */}
@@ -502,7 +502,7 @@
 //     textAlign: 'center',
 //     margin: 40,
 //   },
-//   loginText: {
+//   linkText: {
 //     textAlign: 'center',
 //     marginTop: 20,
 //     color: '#4CAF50',
@@ -702,7 +702,7 @@
 
 //       {/* Login Link */}
 //       <TouchableWithoutFeedback onPress={() => navigation.navigate('LOGIN')}>
-//         <Text style={styles.loginText}>Already have an account? Login</Text>
+//         <Text style={styles.linkText}>Already have an account? Login</Text>
 //       </TouchableWithoutFeedback>
 
 //       {/* Snackbar */}
@@ -744,7 +744,7 @@
 //     textAlign: 'center',
 //     margin: 40,
 //   },
-//   loginText: {
+//   linkText: {
 //     textAlign: 'center',
 //     marginTop: 20,
 //     color: '#4CAF50',
@@ -761,6 +761,8 @@ import {
   Platform,
   ActivityIndicator,
   TouchableWithoutFeedback,
+  Keyboard,
+  TouchableOpacity,
 } from 'react-native';
 import {TextInput, Button, Text, Snackbar} from 'react-native-paper';
 import {useForm, Controller} from 'react-hook-form';
@@ -771,6 +773,8 @@ import {useNavigation} from '@react-navigation/native';
 import MIcon from 'react-native-vector-icons/MaterialIcons';
 import useAuthStore from '../../store/authStore';
 import {API_URL} from '../../utils/config';
+import {ROUTES} from '../../constants/route';
+import {API_ENDPOINTS} from '../../constants/apiEndpoints';
 
 const registerSchema = z
   .object({
@@ -817,7 +821,10 @@ const RegisterScreen = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/register`, payload);
+      const response = await axios.post(
+        `${API_URL}${API_ENDPOINTS.REGISTER}`,
+        payload,
+      );
 
       console.log(response.data);
 
@@ -826,7 +833,7 @@ const RegisterScreen = () => {
         setSnackbarVisible(true);
         await setToken(response.data.token);
         console.log(response.data);
-        navigation.navigate('HOME'); // Redirect to HOME screen
+        navigation.navigate(ROUTES.home); // Redirect to HOME screen
       }
     } catch (error) {
       if (error.response?.status === 422) {
@@ -861,7 +868,6 @@ const RegisterScreen = () => {
     <View style={styles.container}>
       <MIcon style={styles.icon} name="person-add" size={90} color="#aaa" />
       <Text style={styles.title}>Register</Text>
-
       <Controller
         control={control}
         name="name"
@@ -876,10 +882,11 @@ const RegisterScreen = () => {
           />
         )}
       />
-      {errors.name && (
-        <Text style={styles.errorText}>{errors.name.message}</Text>
-      )}
-
+      <View style={styles.errorTextContainer}>
+        {errors.name && (
+          <Text style={styles.errorText}>{errors.name.message}</Text>
+        )}
+      </View>
       <Controller
         control={control}
         name="email"
@@ -895,10 +902,11 @@ const RegisterScreen = () => {
           />
         )}
       />
-      {errors.email && (
-        <Text style={styles.errorText}>{errors.email.message}</Text>
-      )}
-
+      <View style={styles.errorTextContainer}>
+        {errors.email && (
+          <Text style={styles.errorText}>{errors.email.message}</Text>
+        )}
+      </View>
       <Controller
         control={control}
         name="password"
@@ -920,10 +928,11 @@ const RegisterScreen = () => {
           />
         )}
       />
-      {errors.password && (
-        <Text style={styles.errorText}>{errors.password.message}</Text>
-      )}
-
+      <View style={styles.errorTextContainer}>
+        {errors.password && (
+          <Text style={styles.errorText}>{errors.password.message}</Text>
+        )}
+      </View>
       <Controller
         control={control}
         name="confirmPassword"
@@ -945,24 +954,50 @@ const RegisterScreen = () => {
           />
         )}
       />
-      {errors.confirmPassword && (
-        <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>
-      )}
+      <View style={styles.errorTextContainer}>
+        {errors.confirmPassword && (
+          <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>
+        )}
+      </View>
 
-      <Button
+      <TouchableOpacity
+        onPress={handleSubmit(onSubmit)}
+        style={styles.button}
+        disabled={loading} // Disable button when loading
+      >
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color="#fff" />
+            <Text style={styles.loadingText}>Processing</Text>
+          </View>
+        ) : (
+          <Text style={styles.buttonText}>Register</Text>
+        )}
+      </TouchableOpacity>
+
+      {/* <Button
         mode="contained"
         onPress={handleSubmit(onSubmit)}
         style={styles.button}
         disabled={loading}>
         {loading ? 'Processing...' : 'Register'}
-      </Button>
+      </Button> */}
+      {/* {loading && <ActivityIndicator size="large" color="#6200ee" />} */}
+      {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}></TouchableWithoutFeedback> */}
+      {/* <TouchableWithoutFeedback onPress={() => navigation.popTo(ROUTES.login)}>
+        <Text style={styles.linkText}>Already have an account? Login</Text>
+      </TouchableWithoutFeedback> */}
 
-      {loading && (
-        <ActivityIndicator size="large" color="#6200ee" style={styles.loader} />
-      )}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View>
+          {/* Other content */}
+          <TouchableWithoutFeedback
+            onPress={() => navigation.navigate(ROUTES.login)}>
+            <Text style={styles.linkText}>Already have an account? Login</Text>
+          </TouchableWithoutFeedback>
 
-      <TouchableWithoutFeedback onPress={() => navigation.navigate('LOGIN')}>
-        <Text style={styles.loginText}>Already have an account? Login</Text>
+          {/* End of content */}
+        </View>
       </TouchableWithoutFeedback>
 
       <Snackbar
@@ -989,16 +1024,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  button: {
-    marginVertical: 20,
-  },
+  // button: {
+  //   marginVertical: 10,
+  // },
   errorText: {
     color: 'red',
     fontSize: 12,
+    minHeight: 20,
   },
-  loginText: {
+  linkText: {
     textAlign: 'center',
     marginTop: 10,
+    fontSize: 16,
+    padding: 20,
     color: '#6200ee',
   },
   loader: {
@@ -1007,6 +1045,36 @@ const styles = StyleSheet.create({
   icon: {
     alignSelf: 'center',
     marginBottom: 10,
+  },
+
+  errorTextContainer: {
+    minHeight: 10,
+  },
+
+  button: {
+    backgroundColor: '#007BFF',
+    // backgroundColor: '#6200ee',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    width: '100%',
+    flexDirection: 'row',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#fff',
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

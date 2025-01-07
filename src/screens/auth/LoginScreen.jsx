@@ -796,15 +796,16 @@
 
 // export default LoginScreen;
 
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import {
   View,
   StyleSheet,
   Platform,
   ActivityIndicator,
   TouchableWithoutFeedback,
+  TouchableOpacity,
 } from 'react-native';
-import {TextInput, Button, Text, Snackbar} from 'react-native-paper';
+import {TextInput, Text, Snackbar} from 'react-native-paper';
 import {useForm, Controller} from 'react-hook-form';
 import {z} from 'zod';
 import {zodResolver} from '@hookform/resolvers/zod';
@@ -814,6 +815,8 @@ import MIcon from 'react-native-vector-icons/MaterialIcons';
 
 import useAuthStore from '../../store/authStore';
 import {API_URL} from '../../utils/config';
+import {ROUTES} from '../../constants/route';
+import {API_ENDPOINTS} from '../../constants/apiEndpoints';
 
 // Validation schema with Zod
 const loginSchema = z.object({
@@ -828,11 +831,6 @@ const LoginScreen = () => {
   const [snackbarVisible, setSnackbarVisible] = useState(false); // Snackbar visibility
   const [snackbarMessage, setSnackbarMessage] = useState(''); // Snackbar message
   const navigation = useNavigation();
-
-  const init = async () => {
-    const url = API_URL + '/login';
-    console.log(url); // 'https://anshumemorial.in/finbook/api/login'
-  };
 
   const {
     control,
@@ -850,21 +848,33 @@ const LoginScreen = () => {
 
     try {
       setLoading(true); // Start loading
-      const response = await axios.post(`${API_URL}/login`, payload);
+      const response = await axios.post(
+        `${API_URL}${API_ENDPOINTS.LOGIN}`,
+        payload,
+      );
 
       if (response.status === 200) {
         setSnackbarMessage('Login Successful'); // Success message
         setSnackbarVisible(true); // Show snackbar
+
         await setToken(response.data.token); // Save token securely
-        console.log(response.data);
-        navigation.navigate('HOME'); // Redirect to HOME screen
+
+        // console.log(response.data);
+
+        navigation.navigate(ROUTES.home); // Redirect to HOME screen
       }
     } catch (error) {
-      setSnackbarMessage(
-        error.response?.data?.message || 'Something went wrong',
-      ); // Error message
-      setSnackbarVisible(true); // Show snackbar
-      console.error(error);
+      // console.error('error.response:', error.response);
+
+      if (error.response && error.response.status === 422) {
+        setSnackbarMessage(
+          error.response?.data?.message || 'Something went wrong',
+        ); // Error message
+
+        setSnackbarVisible(true); // Show snackbar
+      } else {
+        // console.error('Error:', error);
+      }
     } finally {
       setLoading(false); // Stop loading
     }
@@ -922,25 +932,39 @@ const LoginScreen = () => {
       )}
 
       {/* Submit Button */}
-      <Button
+      {/* <Button
         mode="contained"
         onPress={handleSubmit(onSubmit)}
         style={styles.button}
         disabled={loading}>
         {loading ? 'Processing...' : 'Login'}
-      </Button>
+        <ActivityIndicator size="small" color="white" style={styles.loader} />
+      </Button> */}
 
-      {loading && (
-        <ActivityIndicator size="large" color="#6200ee" style={styles.loader} />
-      )}
+      <TouchableOpacity
+        onPress={handleSubmit(onSubmit)}
+        style={styles.button}
+        disabled={loading} // Disable button when loading
+      >
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color="#fff" />
+            <Text style={styles.loadingText}>Processing</Text>
+          </View>
+        ) : (
+          <Text style={styles.buttonText}>Login</Text>
+        )}
+      </TouchableOpacity>
 
       {/* register  Link */}
-      <TouchableWithoutFeedback onPress={() => navigation.navigate('REGISTER')}>
+      <TouchableWithoutFeedback
+        onPress={() => navigation.navigate(ROUTES.register)}>
         <Text style={styles.registerText}>New user? Create account</Text>
       </TouchableWithoutFeedback>
 
       {/* Snackbar */}
       <Snackbar
+        style={styles.snackbar}
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}
         action={{
@@ -963,16 +987,37 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
+
   button: {
-    marginVertical: 20,
-  },
-  loader: {
+    backgroundColor: '#007BFF',
+    // backgroundColor: '#6200ee',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 20,
+    width: '100%',
+    flexDirection: 'row',
   },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#fff',
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+
   errorText: {
     color: 'red',
     fontSize: 12,
-    marginBottom: 10,
+    // marginBottom: 10,
   },
   icon: {
     textAlign: 'center',
@@ -980,9 +1025,12 @@ const styles = StyleSheet.create({
   },
   registerText: {
     textAlign: 'center',
-    marginTop: 20,
-    color: '#4CAF50',
-    fontSize: 18,
+    marginTop: 10,
+    padding: 20,
+    color: '#6200ee',
+  },
+  snackbar: {
+    width: '100%',
   },
 });
 

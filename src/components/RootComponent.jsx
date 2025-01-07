@@ -1,3 +1,4 @@
+// RootComponent.jsx
 import {SafeAreaView, StyleSheet, Text} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import Animated, {
@@ -7,6 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import NetInfo from '@react-native-community/netinfo';
+import {PaperProvider} from 'react-native-paper';
 
 const ANIMATION_TIME = 600;
 const HIDE_DELAY = 1000;
@@ -62,19 +64,22 @@ const RootComponent = ({children, rootStyles = {}}) => {
   }, [animatedMessagePosition, networkStatus.isConnected]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Animated.View
-        style={[
-          animatedMessageStyle,
-          styles.messageContainer,
-          {backgroundColor: networkStatus.bgColor},
-        ]}>
-        <Text style={styles.messageText}>{networkStatus.message}</Text>
-      </Animated.View>
-      <Animated.View style={[contentMarginStyle, styles.container, rootStyles]}>
-        {children}
-      </Animated.View>
-    </SafeAreaView>
+    <PaperProvider>
+      <SafeAreaView style={styles.container}>
+        <Animated.View
+          style={[
+            animatedMessageStyle,
+            styles.messageContainer,
+            {backgroundColor: networkStatus.bgColor},
+          ]}>
+          <Text style={styles.messageText}>{networkStatus.message}</Text>
+        </Animated.View>
+        <Animated.View
+          style={[contentMarginStyle, styles.container, rootStyles]}>
+          {children}
+        </Animated.View>
+      </SafeAreaView>
+    </PaperProvider>
   );
 };
 
