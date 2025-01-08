@@ -5,7 +5,6 @@ const SettingsScreen = ({navigation}) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={styles.btn}
         onPress={() => {
           // Navigate to HomeScreen
           navigation.goBack();

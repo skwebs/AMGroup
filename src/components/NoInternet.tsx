@@ -1,11 +1,10 @@
 // src/components/NoInternet.tsx
 import React from 'react';
-import { Text, StyleSheet, View } from 'react-native';
+import { Text, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withDelay,
 } from 'react-native-reanimated';
 import { useNetworkStore } from '../store/zustand/networkStore';
 
@@ -38,7 +37,7 @@ const NoInternet = () => {
   });
 
   // Don't render the component if the network is connected
-  if (isConnected) {return null;}
+  if (isConnected) { return null; }
 
   return (
     <Animated.View style={[styles.container, animatedStyle]}>
