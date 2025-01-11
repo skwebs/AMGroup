@@ -1,34 +1,42 @@
 import React, {useEffect} from 'react';
+import useAuthStore from './src/store/zustand/authStore';
+import AuthService from './src/services/auth';
 import {NavigationContainer} from '@react-navigation/native';
-import useAuthStore from './src/store/authStore';
 import RootComponent from './src/components/RootComponent';
 import AppStack from './src/navigation/AppStack';
 import AuthStack from './src/navigation/AuthStack';
-import LoadingScreen from './src/screens/LoadingScreen';
+import SplashScreen from './src/screens/SplashScreen';
 
 const App = () => {
-  const {token, loading, getToken} = useAuthStore();
+  const {isAuthenticated, setAuthenticated} = useAuthStore(); // Get Zustand state and updater
 
   useEffect(() => {
-    // Ensure token is fetched as soon as the app loads
-    if (!token) {
-      getToken();
-    }
-  }, [token, getToken]);
+    const checkAuth = async () => {
+      try {
+        const authStatus = await AuthService.isAuthenticated();
+        setAuthenticated(authStatus);
+      } catch (error) {
+        console.error('Error checking authentication status:', error);
+        setAuthenticated(false); // Handle error state
+      }
+    };
 
-  // Show the loading screen while fetching the token
-  if (loading) {
-    return <LoadingScreen />;
+    checkAuth();
+  }, [setAuthenticated]);
+
+  // Show loading screen while `isAuthenticated` is null
+  if (isAuthenticated === null) {
+    return <SplashScreen />;
   }
 
-  // Memoize AppStack and AuthStack to prevent unnecessary re-renders
+  // Memoize AppStack and AuthStack
   const AppStackMemo = React.memo(AppStack);
   const AuthStackMemo = React.memo(AuthStack);
 
   return (
     <NavigationContainer>
       <RootComponent>
-        {token ? <AppStackMemo /> : <AuthStackMemo />}
+        {isAuthenticated ? <AppStackMemo /> : <AuthStackMemo />}
       </RootComponent>
     </NavigationContainer>
   );

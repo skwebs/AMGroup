@@ -8,9 +8,9 @@
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
-     "apk": "cd android && gradlew.bat assembleRelease",
-     "clean": "cd android && gradlew.bat clean",
-     "build:clean": "cd android && gradlew.bat clean && gradlew.bat assembleRelease"
+    "apk": "cd android && gradlew.bat assembleRelease",
+    "clean": "cd android && gradlew.bat clean",
+    "build:clean": "cd android && gradlew.bat clean && gradlew.bat assembleRelease"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -22,6 +22,7 @@
     "react-hook-form": "^7.54.2",
     "react-native": "0.76.5",
     "react-native-config": "^1.5.3",
+    "react-native-device-info": "^14.0.2",
     "react-native-gesture-handler": "^2.21.2",
     "react-native-keychain": "^9.2.2",
     "react-native-paper": "^5.12.5",

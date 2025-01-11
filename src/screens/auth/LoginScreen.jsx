@@ -12,7 +12,7 @@ import {TextInput, Text, Snackbar} from 'react-native-paper';
 import {useForm, Controller} from 'react-hook-form';
 import {z} from 'zod';
 import {zodResolver} from '@hookform/resolvers/zod';
-import axios from 'axios';
+// import axios from 'axios';
 import {useNavigation} from '@react-navigation/native';
 import MIcon from 'react-native-vector-icons/MaterialIcons';
 
@@ -20,6 +20,8 @@ import useAuthStore from '../../store/authStore';
 import {API_URL} from '../../utils/config';
 import {ROUTES} from '../../constants/route';
 import {API_ENDPOINTS} from '../../constants/apiEndpoints';
+import FormTextInput from '../../components/common/FormTextInput';
+import AuthService from '../../services/auth';
 
 // Validation schema with Zod
 const loginSchema = z.object({
@@ -38,49 +40,60 @@ const LoginScreen = () => {
   const {
     control,
     handleSubmit,
+    setValue,
+    trigger,
     formState: {errors},
   } = useForm({
     resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async data => {
-    const payload = {
-      ...data,
-      device_name: `${Platform.OS} ${Platform.Version}`,
-    };
+    console.log(data);
 
     try {
-      setLoading(true); // Start loading
-      const response = await axios.post(
-        `${API_URL}${API_ENDPOINTS.LOGIN}`,
-        payload,
-      );
-
-      if (response.status === 200) {
-        setSnackbarMessage('Login Successful'); // Success message
-        setSnackbarVisible(true); // Show snackbar
-
-        await setToken(response.data.token); // Save token securely
-
-        // console.log(response.data);
-
-        navigation.navigate(ROUTES.home); // Redirect to HOME screen
-      }
+      const res = await AuthService.login(data.email, data.password);
+      console.log(res);
     } catch (error) {
-      // console.error('error.response:', error.response);
-
-      if (error.response && error.response.status === 422) {
-        setSnackbarMessage(
-          error.response?.data?.message || 'Something went wrong',
-        ); // Error message
-
-        setSnackbarVisible(true); // Show snackbar
-      } else {
-        // console.error('Error:', error);
-      }
-    } finally {
-      setLoading(false); // Stop loading
+      console.error('Error:', error);
     }
+    // const payload = {
+    //   ...data,
+    //   device_name: `${Platform.OS} ${Platform.Version}`,
+    // };
+
+    // try {
+    //   setLoading(true); // Start loading
+    //   // const response = await axios.post(
+    //   //   `${API_URL + API_ENDPOINTS.LOGIN}`,
+    //   //   payload,
+    //   // );
+    //   AuthService.login(email, password);
+
+    //   if (response.status === 200) {
+    //     setSnackbarMessage('Login Successful'); // Success message
+    //     setSnackbarVisible(true); // Show snackbar
+
+    //     await setToken(response.data.token); // Save token securely
+
+    //     // console.log(response.data);
+
+    //     navigation.navigate(ROUTES.home); // Redirect to HOME screen
+    //   }
+    // } catch (error) {
+    //   // console.error('error.response:', error.response);
+
+    //   if (error.response && error.response.status === 422) {
+    //     setSnackbarMessage(
+    //       error.response?.data?.message || 'Something went wrong',
+    //     ); // Error message
+
+    //     setSnackbarVisible(true); // Show snackbar
+    //   } else {
+    //     // console.error('Error:', error);
+    //   }
+    // } finally {
+    //   setLoading(false); // Stop loading
+    // }
   };
 
   return (
@@ -109,6 +122,24 @@ const LoginScreen = () => {
           <Text style={styles.errorText}>{errors.email.message}</Text>
         )}
       </View>
+
+      {/* <FormTextInput
+        name="username"
+        control={{setValue, trigger}}
+        errors={errors}
+        placeholder="Enter your username"
+      />
+       */}
+
+      {/* Name Input */}
+      {/* <FormTextInput
+        name="name"
+        control={control}
+        placeholder="Enter your name"
+        focusedBorderColor="#28a745"
+        defaultBorderColor="#ccc"
+        inputStyle={styles.customInput}
+      /> */}
 
       {/* Password Input */}
       <Controller

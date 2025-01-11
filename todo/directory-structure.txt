@@ -1,3 +1,5 @@
+https://chatgpt.com/c/67752074-e06c-800c-9864-bd95be064a06
+
 src/
 ├── api/                         # API-related utilities
 │   ├── axiosInstance.ts          # Pre-configured Axios instance

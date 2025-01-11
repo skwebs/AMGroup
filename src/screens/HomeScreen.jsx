@@ -1,13 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {View, Button, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import axios from 'axios';
-import useAuthStore from '../store/authStore';
-import {API_URL} from '../utils/config';
-import {API_ENDPOINTS} from '../constants/apiEndpoints';
 import {ROUTES} from '../constants/route';
+import AuthService from '../services/auth';
 
 const HomeScreen = ({navigation}) => {
-  const {deleteToken, token} = useAuthStore(); // Assuming you have a token in your store
   const [user, setUser] = useState(null); // Store user details
   const [loading, setLoading] = useState(false); // Track loading state
   const [error, setError] = useState(null); // Track errors
@@ -15,20 +11,14 @@ const HomeScreen = ({navigation}) => {
   // Fetch user details when the component mounts
   useEffect(() => {
     const fetchUserDetails = async () => {
-      if (!token) {
-        return;
-      } // If no token, don't fetch user data
-
       setLoading(true); // Start loading
-      try {
-        const response = await axios.get(`${API_URL}${API_ENDPOINTS.USER}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
 
-        setUser(response.data); // Set user data
+      try {
+        const userData = await AuthService.getUserDetails();
+
+        setUser(userData); // Set user data
       } catch (err) {
+        console.error(err);
         setError('Failed to fetch user details'); // Set error message
       } finally {
         setLoading(false); // Stop loading
@@ -36,26 +26,12 @@ const HomeScreen = ({navigation}) => {
     };
 
     fetchUserDetails();
-  }, [token]); // Re-run when token changes
+  }, []); // Re-run when token changes
 
   // Logout handler
   const handleLogout = async () => {
     try {
-      // Send logout request to server to delete token
-      if (token) {
-        await axios.post(
-          `${API_URL}${API_ENDPOINTS.LOGOUT}`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-      }
-
-      // Clear local token
-      await deleteToken();
+      await AuthService.logout();
       console.log('Logged out successfully');
     } catch (err) {
       console.error('Error during logout', err);
@@ -69,8 +45,6 @@ const HomeScreen = ({navigation}) => {
       {/* Show error if any */}
       {/* Display user details if available */}
 
-      <Button title="Logout" onPress={handleLogout} />
-
       {user ? (
         <View style={styles.userDetailsContainer}>
           <Text style={styles.userDetailText}>Name: {user.name}</Text>
@@ -79,6 +53,8 @@ const HomeScreen = ({navigation}) => {
       ) : (
         <Text>No user data available</Text>
       )}
+
+      <Button title="Logout" onPress={handleLogout} />
 
       <TouchableOpacity
         style={styles.btn}
