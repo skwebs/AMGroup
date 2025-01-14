@@ -6,8 +6,14 @@ import axios, { axiosInstance } from '../utils/axios';
 import deviceConfig from '../config/deviceConfig';
 import useAuthStore from '../store/zustand/authStore';
 
-const AuthService = {
+// interface ValidationError {
+//   message: string;
+//   errors: {
+//     [key: string]: string[];
+//   };
+// }
 
+const AuthService = {
 
   register: async (
     registerInfo: {
@@ -17,7 +23,7 @@ const AuthService = {
       password: string;
       confirmPassword: string;
     }
-  ): Promise<boolean> => {
+  ): Promise<any> => {
     const { setAuthenticated } = useAuthStore.getState();
 
     const device_name = await deviceConfig.getDeviceId();
@@ -31,24 +37,26 @@ const AuthService = {
       device_name,
     };
 
-    console.log('registerInfo: ', registerInfo);
-
     try {
-      const response = await axios.post(`${API_BASE_URL + API_ENDPOINTS.REGISTER}`,
-        data
-      );
+      const response = await axios.post(`${API_BASE_URL + API_ENDPOINTS.REGISTER}`, data);
       const token = response.data.token;
       await TokenService.saveToken(token);
       setAuthenticated(true);
-      return true;
-    } catch (error) {
-      console.error('Registration failed:', error);
+      return { success: true };
+    } catch (error: any) {
+      if (error.response?.status === 422) {
+        throw {
+          status: 422,
+          message: error.response.data.message,
+          errors: error.response.data.errors,
+        };
+      }
       setAuthenticated(false);
-      return false;
+      throw error;
     }
   },
 
-  login: async (loginInfo: { email: string; password: string }): Promise<boolean> => {
+  login: async (loginInfo: { email: string; password: string }): Promise<any> => {
     const { setAuthenticated } = useAuthStore.getState();
 
     try {
@@ -59,15 +67,21 @@ const AuthService = {
         device_name,
       };
 
-      const response = await axios.post(`${API_BASE_URL + API_ENDPOINTS.LOGIN}`, data,);
+      const response = await axios.post(`${API_BASE_URL + API_ENDPOINTS.LOGIN}`, data);
       const token = response.data.token;
       await TokenService.saveToken(token);
       setAuthenticated(true);
-      return true;
-    } catch (error) {
-      console.error('Login failed:', error);
+      return { success: true };
+    } catch (error: any) {
+      if (error.response?.status === 422) {
+        throw {
+          status: 422,
+          message: error.response.data.message,
+          errors: error.response.data.errors,
+        };
+      }
       setAuthenticated(false);
-      return false;
+      throw error;
     }
   },
 

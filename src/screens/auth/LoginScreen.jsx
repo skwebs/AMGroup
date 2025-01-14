@@ -30,7 +30,8 @@ const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false); // Loading state
   const [snackbarVisible, setSnackbarVisible] = useState(false); // Snackbar visibility
-  const [snackbarMessage] = useState(''); // Snackbar message
+  const [snackbarMessage, setSnackbarMessage] = useState(''); // Snackbar message
+  const [serverErrors, setServerErrors] = useState({}); // Server errors
   const navigation = useNavigation();
 
   const {
@@ -42,53 +43,26 @@ const LoginScreen = () => {
   });
 
   const onSubmit = async data => {
-    console.log('login form data: ', data);
+    setServerErrors({});
+    setSnackbarMessage('');
+
     try {
-      setLoading(true); // Start loading
+      setLoading(true);
       await AuthService.login(data);
+      navigation.navigate(ROUTES.home);
     } catch (error) {
-      console.error('Error:', error);
+      if (error.status === 422) {
+        // Handle validation errors
+        setServerErrors(error.errors || {});
+        setSnackbarMessage(error.message || 'Validation failed');
+      } else {
+        // Handle other errors
+        setSnackbarMessage(error.message || 'An error occurred during login');
+      }
+      setSnackbarVisible(true);
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
-    // const payload = {
-    //   ...data,
-    //   device_name: `${Platform.OS} ${Platform.Version}`,
-    // };
-
-    // try {
-    //   setLoading(true); // Start loading
-    //   // const response = await axios.post(
-    //   //   `${API_URL + API_ENDPOINTS.LOGIN}`,
-    //   //   payload,
-    //   // );
-    //   AuthService.login(email, password);
-
-    //   if (response.status === 200) {
-    //     setSnackbarMessage('Login Successful'); // Success message
-    //     setSnackbarVisible(true); // Show snackbar
-
-    //     await setToken(response.data.token); // Save token securely
-
-    //     // console.log(response.data);
-
-    //     navigation.navigate(ROUTES.home); // Redirect to HOME screen
-    //   }
-    // } catch (error) {
-    //   // console.error('error.response:', error.response);
-
-    //   if (error.response && error.response.status === 422) {
-    //     setSnackbarMessage(
-    //       error.response?.data?.message || 'Something went wrong',
-    //     ); // Error message
-
-    //     setSnackbarVisible(true); // Show snackbar
-    //   } else {
-    //     // console.error('Error:', error);
-    //   }
-    // } finally {
-    //   setLoading(false); // Stop loading
-    // }
   };
 
   return (
@@ -101,68 +75,57 @@ const LoginScreen = () => {
         control={control}
         name="email"
         render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            label="Email"
-            mode="outlined"
-            keyboardType="email-address"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-            error={!!errors.email}
-          />
+          <View style={styles.inputContainer}>
+            <TextInput
+
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              mode="outlined"
+              placeholder="Email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            {errors.email && (
+              <Text style={styles.errorText}>{errors.email.message}</Text>
+            )}
+            {serverErrors.email && (
+              <Text style={styles.errorText}>{serverErrors.email[0]}</Text>
+            )}
+          </View>
         )}
       />
-      <View style={styles.errorTextContainer}>
-        {errors.email && (
-          <Text style={styles.errorText}>{errors.email.message}</Text>
-        )}
-      </View>
-
-      {/* <FormTextInput
-        name="username"
-        control={{setValue, trigger}}
-        errors={errors}
-        placeholder="Enter your username"
-      />
-       */}
-
-      {/* Name Input */}
-      {/* <FormTextInput
-        name="name"
-        control={control}
-        placeholder="Enter your name"
-        focusedBorderColor="#28a745"
-        defaultBorderColor="#ccc"
-        inputStyle={styles.customInput}
-      /> */}
 
       {/* Password Input */}
       <Controller
         control={control}
         name="password"
         render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            label="Password"
-            mode="outlined"
-            secureTextEntry={!showPassword}
-            right={
-              <TextInput.Icon
-                icon={showPassword ? 'eye-off' : 'eye'}
-                onPress={() => setShowPassword(prev => !prev)}
-              />
-            }
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-            error={!!errors.password}
-          />
+          <View style={styles.inputContainer}>
+            <TextInput
+
+              onBlur={onBlur}
+              mode="outlined"
+              onChangeText={onChange}
+              value={value}
+              placeholder="Password"
+              secureTextEntry={!showPassword}
+              right={
+                <TextInput.Icon
+                  icon={showPassword ? 'eye-off' : 'eye'}
+                  onPress={() => setShowPassword(!showPassword)}
+                />
+              }
+            />
+            {errors.password && (
+              <Text style={styles.errorText}>{errors.password.message}</Text>
+            )}
+            {serverErrors.password && (
+              <Text style={styles.errorText}>{serverErrors.password[0]}</Text>
+            )}
+          </View>
         )}
       />
-      <View style={styles.errorTextContainer}>
-        {errors.password && (
-          <Text style={styles.errorText}>{errors.password.message}</Text>
-        )}
-      </View>
 
       <TouchableOpacity
         onPress={handleSubmit(onSubmit)}
@@ -184,7 +147,8 @@ const LoginScreen = () => {
         <View>
           {/* Other content */}
           <TouchableWithoutFeedback
-            onPress={() => navigation.navigate(ROUTES.register)}>
+            onPress={() => navigation.navigate(ROUTES.register)}
+          >
             <Text style={styles.linkText}>New user? Create account</Text>
           </TouchableWithoutFeedback>
           {/* End of content */}
@@ -199,7 +163,8 @@ const LoginScreen = () => {
         action={{
           label: 'Close',
           onPress: () => setSnackbarVisible(false),
-        }}>
+        }}
+      >
         {snackbarMessage}
       </Snackbar>
     </View>
@@ -248,7 +213,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'red',
     fontSize: 12,
-    // marginBottom: 10,
+    marginTop: 5,
   },
   icon: {
     textAlign: 'center',
@@ -264,8 +229,8 @@ const styles = StyleSheet.create({
   snackbar: {
     width: '100%',
   },
-  errorTextContainer: {
-    minHeight: 10,
+  inputContainer: {
+    marginBottom: 10,
   },
 });
 

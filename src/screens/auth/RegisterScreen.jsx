@@ -14,6 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigation } from '@react-navigation/native';
 import MIcon from 'react-native-vector-icons/MaterialIcons';
 import AuthService from '../../services/auth';
+import { ROUTES } from '../../constants/route';
 
 const registerSchema = z
   .object({
@@ -32,9 +33,11 @@ const registerSchema = z
 
 const RegisterScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false); // Loading state
-  const [snackbarVisible, setSnackbarVisible] = useState(false); // Snackbar visibility
-  const [snackbarMessage, setSnackbarMessage] = useState(''); // Snackbar message
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [serverErrors, setServerErrors] = useState({});
   const navigation = useNavigation();
 
   const {
@@ -46,43 +49,21 @@ const RegisterScreen = () => {
   });
 
   const onSubmit = async data => {
-    console.log('register form data: ', data);
+    setServerErrors({});
+    setSnackbarMessage('');
 
-    const payload = {
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      confirmPassword: data.confirmPassword,
-    };
-
-    console.log(payload);
     try {
       setLoading(true);
-      await AuthService.register(payload);
+      await AuthService.register(data);
+      navigation.navigate('Home');
     } catch (error) {
-
-      console.error('Error:', error);
-      if (error.response?.status === 422) {
-        const validationErrors = error.response.data.errors;
-        if (validationErrors) {
-          Object.keys(validationErrors).forEach(key => {
-            if (key === 'name') {
-              setSnackbarMessage(validationErrors[key][0]);
-            } else if (key === 'email') {
-              setSnackbarMessage(validationErrors[key][0]);
-            } else if (key === 'password') {
-              setSnackbarMessage(validationErrors[key][0]);
-            } else {
-              setSnackbarMessage('Validation error. Please check your input.');
-            }
-          });
-        } else {
-          setSnackbarMessage('Invalid input. Please try again.');
-        }
+      if (error.status === 422) {
+        // Handle validation errors
+        setServerErrors(error.errors || {});
+        setSnackbarMessage(error.message || 'Validation failed');
       } else {
-        setSnackbarMessage(
-          error.response?.data?.message || 'Something went wrong',
-        );
+        // Handle other errors
+        setSnackbarMessage(error.message || 'An error occurred during registration');
       }
       setSnackbarVisible(true);
     } finally {
@@ -94,102 +75,122 @@ const RegisterScreen = () => {
     <View style={styles.container}>
       <MIcon style={styles.icon} name="person-add" size={90} color="#aaa" />
       <Text style={styles.title}>Register</Text>
+
+      {/* Name Input */}
       <Controller
         control={control}
         name="name"
         render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            label="Name"
-            mode="outlined"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-            error={!!errors.name}
-          />
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[styles.input, (!!errors.name || !!serverErrors.name) && styles.inputError]}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              mode="outlined"
+              placeholder="Full Name"
+            />
+            {errors.name && (
+              <Text style={styles.errorText}>{errors.name.message}</Text>
+            )}
+            {serverErrors.name && (
+              <Text style={styles.errorText}>{serverErrors.name[0]}</Text>
+            )}
+          </View>
         )}
       />
-      <View style={styles.errorTextContainer}>
-        {errors.name && (
-          <Text style={styles.errorText}>{errors.name.message}</Text>
-        )}
-      </View>
+
+      {/* Email Input */}
       <Controller
         control={control}
         name="email"
         render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            label="Email"
-            mode="outlined"
-            keyboardType="email-address"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-            error={!!errors.email}
-          />
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[styles.input, (!!errors.email || !!serverErrors.email) && styles.inputError]}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              placeholder="Email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              mode="outlined"
+            />
+            {errors.email && (
+              <Text style={styles.errorText}>{errors.email.message}</Text>
+            )}
+            {serverErrors.email && (
+              <Text style={styles.errorText}>{serverErrors.email[0]}</Text>
+            )}
+          </View>
         )}
       />
-      <View style={styles.errorTextContainer}>
-        {errors.email && (
-          <Text style={styles.errorText}>{errors.email.message}</Text>
-        )}
-      </View>
+
+      {/* Password Input */}
       <Controller
         control={control}
         name="password"
         render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            label="Password"
-            mode="outlined"
-            secureTextEntry={!showPassword}
-            right={
-              <TextInput.Icon
-                icon={showPassword ? 'eye-off' : 'eye'}
-                onPress={() => setShowPassword(prev => !prev)}
-              />
-            }
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-            error={!!errors.password}
-          />
+          <View style={styles.inputContainer}>
+            <TextInput
+
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              placeholder="Password"
+              secureTextEntry={!showPassword}
+              mode="outlined"
+              right={
+                <TextInput.Icon
+                  icon={showPassword ? 'eye-off' : 'eye'}
+                  onPress={() => setShowPassword(!showPassword)}
+                />
+              }
+            />
+            {errors.password && (
+              <Text style={styles.errorText}>{errors.password.message}</Text>
+            )}
+            {serverErrors.password && (
+              <Text style={styles.errorText}>{serverErrors.password[0]}</Text>
+            )}
+          </View>
         )}
       />
-      <View style={styles.errorTextContainer}>
-        {errors.password && (
-          <Text style={styles.errorText}>{errors.password.message}</Text>
-        )}
-      </View>
+
+      {/* Confirm Password Input */}
       <Controller
         control={control}
         name="confirmPassword"
         render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            label="Confirm Password"
-            mode="outlined"
-            secureTextEntry={!showPassword}
-            right={
-              <TextInput.Icon
-                icon={showPassword ? 'eye-off' : 'eye'}
-                onPress={() => setShowPassword(prev => !prev)}
-              />
-            }
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-            error={!!errors.confirmPassword}
-          />
+          <View style={styles.inputContainer}>
+            <TextInput
+              mode="outlined"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              placeholder="Confirm Password"
+              secureTextEntry={!showConfirmPassword}
+              right={
+                <TextInput.Icon
+                  icon={showConfirmPassword ? 'eye-off' : 'eye'}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                />
+              }
+            />
+            {errors.confirmPassword && (
+              <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>
+            )}
+            {serverErrors.password_confirmation && (
+              <Text style={styles.errorText}>{serverErrors.password_confirmation[0]}</Text>
+            )}
+          </View>
         )}
       />
-      <View style={styles.errorTextContainer}>
-        {errors.confirmPassword && (
-          <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>
-        )}
-      </View>
 
       <TouchableOpacity
         onPress={handleSubmit(onSubmit)}
         style={styles.button}
-        disabled={loading} // Disable button when loading
+        disabled={loading}
       >
         {loading ? (
           <View style={styles.loadingContainer}>
@@ -203,22 +204,21 @@ const RegisterScreen = () => {
 
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View>
-          {/* Other content */}
-          <TouchableWithoutFeedback onPress={() => navigation.goBack()}>
+          <TouchableWithoutFeedback onPress={() => navigation.popTo(ROUTES.login)}>
             <Text style={styles.linkText}>Already have an account? Login</Text>
           </TouchableWithoutFeedback>
-
-          {/* End of content */}
         </View>
       </TouchableWithoutFeedback>
 
       <Snackbar
+        style={styles.snackbar}
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}
         action={{
           label: 'Close',
           onPress: () => setSnackbarVisible(false),
-        }}>
+        }}
+      >
         {snackbarMessage}
       </Snackbar>
     </View>
@@ -237,11 +237,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: 'gray',
   },
+  inputContainer: {
+    marginBottom: 15,
+  },
 
   errorText: {
     color: 'red',
     fontSize: 12,
-    minHeight: 20,
+    marginTop: 2,
   },
   linkText: {
     textAlign: 'center',
@@ -257,14 +260,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 10,
   },
-
-  errorTextContainer: {
-    minHeight: 10,
-  },
-
   button: {
     backgroundColor: '#007BFF',
-    // backgroundColor: '#6200ee',
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -286,6 +283,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  snackbar: {
+    backgroundColor: '#6200ee',
   },
 });
 

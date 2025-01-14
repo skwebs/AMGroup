@@ -1,87 +1,97 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { ROUTES } from '../constants/route';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import AuthService from '../services/auth';
+import useAuthStore from '../store/zustand/authStore';
 
 const HomeScreen = ({ navigation }) => {
-  const [user, setUser] = useState(null); // Store user details
-  const [loading, setLoading] = useState(false); // Track loading state
-  const [error, setError] = useState(null); // Track errors
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const { setAuthenticated } = useAuthStore();
 
-  // Fetch user details when the component mounts
   useEffect(() => {
-    const fetchUserDetails = async () => {
-      setLoading(true); // Start loading
-
-      try {
-        const userData = await AuthService.getUserDetails();
-
-        setUser(userData); // Set user data
-      } catch (err) {
-        console.error(err);
-        setError('Failed to fetch user details'); // Set error message
-      } finally {
-        setLoading(false); // Stop loading
-      }
-    };
-
     fetchUserDetails();
-  }, []); // Re-run when token changes
+  }, []);
 
-  // Logout handler
-  const handleLogout = async () => {
+  const fetchUserDetails = async () => {
     try {
-      setLoading(true); // Start loading
-      await AuthService.logout();
-      console.log('Logged out successfully');
+      const userData = await AuthService.getUserDetails();
+      setUser(userData);
+      setError(null);
     } catch (err) {
-      console.error('Error during logout', err);
+      console.error('Error fetching user details:', err);
+      setError('Failed to load user details');
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      setLoggingOut(true);
+      await AuthService.logout();
+      setAuthenticated(false);
+    } catch (err) {
+      console.error('Logout failed:', err);
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007BFF" />
+        <Text style={styles.loadingText}>Loading user details...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchUserDetails}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {loading && <Text>Loading...</Text>}
-      {error && <Text style={styles.errorText}>{error}</Text>}
-      {/* Show error if any */}
-      {/* Display user details if available */}
-      {user ? (
-        <View style={styles.userDetailsContainer}>
-          <Text style={styles.userDetailText}>Name: {user.name}</Text>
-          <Text style={styles.userDetailText}>Email: {user.email}</Text>
-        </View>
-      ) : (
-        <Text>No user data available</Text>
-      )}
-
-      <View style={{ flex: 1 }} />
+      <View style={styles.userDetailsContainer}>
+        <Text style={styles.welcomeText}>Welcome!</Text>
+        {user && (
+          <>
+            <Text style={styles.userDetailText}>Name: {user.name}</Text>
+            <Text style={styles.userDetailText}>Email: {user.email}</Text>
+            <Text style={styles.userDetailText}>Mobile: {user.mobile}</Text>
+          </>
+        )}
+      </View>
 
       <TouchableOpacity
-        style={styles.button}
-        onPress={() => {
-          navigation.navigate(ROUTES.settings);
-        }}>
-        <Text style={styles.buttonText}>Settings</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
+        style={styles.logoutButton}
         onPress={handleLogout}
-        style={styles.button}
-        disabled={loading} // Disable button when loading
+        disabled={loggingOut}
       >
-        {loading ? (
+        {loggingOut ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color="#fff" />
-            <Text style={styles.loadingText}>Processing</Text>
+            <Text style={styles.logoutButtonText}>Processing...</Text>
           </View>
         ) : (
-          <Text style={styles.buttonText}>Logout</Text>
+          <Text style={styles.logoutButtonText}>Logout</Text>
         )}
       </TouchableOpacity>
-
-
     </View>
   );
 };
@@ -89,57 +99,64 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'space-between',
-    alignItems: 'center',
     padding: 20,
-  },
-  userDetailsContainer: {
-    marginBottom: 20,
-  },
-  userDetailText: {
-    fontSize: 16,
-    marginVertical: 5,
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 14,
-    marginBottom: 20,
-  },
-
-  btnText: {
-    backgroundColor: '#007BFF',
-    padding: 10,
-    borderRadius: 5,
-    marginVertical: 10,
-    fontSize: 18,
-    color: '#fff',
-    width: '100%',
-    paddingHorizontal: 40,
-    textAlign: 'center',
-  },
-  button: {
-    backgroundColor: '#007BFF',
-    // backgroundColor: '#6200ee',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-    width: '100%',
-    flexDirection: 'row',
   },
   loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   loadingText: {
-    color: '#fff',
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+    marginLeft: 10,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: '#007BFF',
+    padding: 10,
+    borderRadius: 5,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  userDetailsContainer: {
+    marginBottom: 30,
+  },
+  welcomeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+  },
+  userDetailText: {
+    fontSize: 16,
+    marginBottom: 10,
+    color: '#666',
+  },
+  logoutButton: {
+    backgroundColor: '#dc3545',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  logoutButtonText: {
+    color: 'white',
     fontSize: 16,
     marginLeft: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
     fontWeight: 'bold',
   },
 });
