@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,18 +8,18 @@ import {
   TouchableOpacity,
   Keyboard,
 } from 'react-native';
-import {TextInput, Text, Snackbar} from 'react-native-paper';
-import {useForm, Controller} from 'react-hook-form';
-import {z} from 'zod';
-import {zodResolver} from '@hookform/resolvers/zod';
+import { TextInput, Text, Snackbar } from 'react-native-paper';
+import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 // import axios from 'axios';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import MIcon from 'react-native-vector-icons/MaterialIcons';
 
 import useAuthStore from '../../store/authStore';
-import {API_URL} from '../../utils/config';
-import {ROUTES} from '../../constants/route';
-import {API_ENDPOINTS} from '../../constants/apiEndpoints';
+import { API_URL } from '../../utils/config';
+import { ROUTES } from '../../constants/route';
+import { API_ENDPOINTS } from '../../constants/apiEndpoints';
 import FormTextInput from '../../components/common/FormTextInput';
 import AuthService from '../../services/auth';
 
@@ -30,7 +30,7 @@ const loginSchema = z.object({
 });
 
 const LoginScreen = () => {
-  const {setToken} = useAuthStore();
+  const { setToken } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false); // Loading state
   const [snackbarVisible, setSnackbarVisible] = useState(false); // Snackbar visibility
@@ -42,19 +42,20 @@ const LoginScreen = () => {
     handleSubmit,
     setValue,
     trigger,
-    formState: {errors},
+    formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async data => {
-    console.log(data);
 
     try {
-      const res = await AuthService.login(data.email, data.password);
-      console.log(res);
+      setLoading(true); // Start loading
+      await AuthService.login(data.email, data.password);
     } catch (error) {
       console.error('Error:', error);
+    } finally {
+      setLoading(false); // Stop loading
     }
     // const payload = {
     //   ...data,
@@ -105,7 +106,7 @@ const LoginScreen = () => {
       <Controller
         control={control}
         name="email"
-        render={({field: {onChange, onBlur, value}}) => (
+        render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
             label="Email"
             mode="outlined"
@@ -145,7 +146,7 @@ const LoginScreen = () => {
       <Controller
         control={control}
         name="password"
-        render={({field: {onChange, onBlur, value}}) => (
+        render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
             label="Password"
             mode="outlined"
