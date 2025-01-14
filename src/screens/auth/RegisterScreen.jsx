@@ -12,7 +12,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import MIcon from 'react-native-vector-icons/MaterialIcons';
+// import MIcon from 'react-native-vector-icons/MaterialIcons';
 import AuthService from '../../services/auth';
 import { ROUTES } from '../../constants/route';
 
@@ -274,13 +274,14 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#007BFF',
-    padding: 12,
+    padding: 15,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 10,
     width: '100%',
     flexDirection: 'row',
+    fontWeight: 'bold',
   },
   loadingContainer: {
     flexDirection: 'row',

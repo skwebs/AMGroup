@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import AuthService from '../services/auth';
 import useAuthStore from '../store/zustand/authStore';
+import { ROUTES } from '../constants/route';
 
 const HomeScreen = ({ navigation }) => {
   const [user, setUser] = useState(null);
@@ -78,6 +79,8 @@ const HomeScreen = ({ navigation }) => {
         )}
       </View>
 
+
+
       <TouchableOpacity
         style={styles.logoutButton}
         onPress={handleLogout}
@@ -91,6 +94,14 @@ const HomeScreen = ({ navigation }) => {
         ) : (
           <Text style={styles.logoutButtonText}>Logout</Text>
         )}
+      </TouchableOpacity>
+
+
+      <TouchableOpacity
+        onPress={() => {
+          navigation.navigate(ROUTES.settings);
+        }}>
+        <Text style={styles.btnText}>Settings</Text>
       </TouchableOpacity>
     </View>
   );
@@ -157,6 +168,18 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     marginLeft: 8,
+    fontWeight: 'bold',
+  },
+  btnText: {
+    backgroundColor: '#007BFF',
+    padding: 15,
+    borderRadius: 5,
+    marginVertical: 30,
+    fontSize: 16,
+    color: '#fff',
+    width: '100%',
+
+    textAlign: 'center',
     fontWeight: 'bold',
   },
 });
