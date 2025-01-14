@@ -1,24 +1,19 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
-  Platform,
   ActivityIndicator,
   TouchableWithoutFeedback,
   Keyboard,
   TouchableOpacity,
 } from 'react-native';
-import {TextInput, Text, Snackbar} from 'react-native-paper';
-import {useForm, Controller} from 'react-hook-form';
-import {z} from 'zod';
-import {zodResolver} from '@hookform/resolvers/zod';
-import axios from 'axios';
-import {useNavigation} from '@react-navigation/native';
+import { TextInput, Text, Snackbar } from 'react-native-paper';
+import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigation } from '@react-navigation/native';
 import MIcon from 'react-native-vector-icons/MaterialIcons';
-import useAuthStore from '../../store/authStore';
-import {API_URL} from '../../utils/config';
-import {ROUTES} from '../../constants/route';
-import {API_ENDPOINTS} from '../../constants/apiEndpoints';
+import AuthService from '../../services/auth';
 
 const registerSchema = z
   .object({
@@ -36,8 +31,6 @@ const registerSchema = z
   });
 
 const RegisterScreen = () => {
-  const {setToken} = useAuthStore();
-
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false); // Loading state
   const [snackbarVisible, setSnackbarVisible] = useState(false); // Snackbar visibility
@@ -47,39 +40,28 @@ const RegisterScreen = () => {
   const {
     control,
     handleSubmit,
-    formState: {errors},
+    formState: { errors },
   } = useForm({
     resolver: zodResolver(registerSchema),
   });
 
   const onSubmit = async data => {
-    console.log(data);
+    console.log('register form data: ', data);
 
     const payload = {
       name: data.name,
       email: data.email,
       password: data.password,
-      password_confirmation: data.confirmPassword,
-      device_name: `${Platform.OS} ${Platform.Version}`,
+      confirmPassword: data.confirmPassword,
     };
 
+    console.log(payload);
     try {
       setLoading(true);
-      const response = await axios.post(
-        `${API_URL}${API_ENDPOINTS.REGISTER}`,
-        payload,
-      );
-
-      console.log(response.data);
-
-      if (response.status === 201) {
-        setSnackbarMessage('Registration Successful');
-        setSnackbarVisible(true);
-        await setToken(response.data.token);
-        console.log(response.data);
-        navigation.navigate(ROUTES.home); // Redirect to HOME screen
-      }
+      await AuthService.register(payload);
     } catch (error) {
+
+      console.error('Error:', error);
       if (error.response?.status === 422) {
         const validationErrors = error.response.data.errors;
         if (validationErrors) {
@@ -115,7 +97,7 @@ const RegisterScreen = () => {
       <Controller
         control={control}
         name="name"
-        render={({field: {onChange, onBlur, value}}) => (
+        render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
             label="Name"
             mode="outlined"
@@ -134,7 +116,7 @@ const RegisterScreen = () => {
       <Controller
         control={control}
         name="email"
-        render={({field: {onChange, onBlur, value}}) => (
+        render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
             label="Email"
             mode="outlined"
@@ -154,7 +136,7 @@ const RegisterScreen = () => {
       <Controller
         control={control}
         name="password"
-        render={({field: {onChange, onBlur, value}}) => (
+        render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
             label="Password"
             mode="outlined"
@@ -180,7 +162,7 @@ const RegisterScreen = () => {
       <Controller
         control={control}
         name="confirmPassword"
-        render={({field: {onChange, onBlur, value}}) => (
+        render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
             label="Confirm Password"
             mode="outlined"

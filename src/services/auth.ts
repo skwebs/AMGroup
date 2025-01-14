@@ -7,53 +7,59 @@ import deviceConfig from '../config/deviceConfig';
 import useAuthStore from '../store/zustand/authStore';
 
 const AuthService = {
+
+
   register: async (
-    name: string,
-    email: string,
-    mobile: string,
-    password: string,
-    confirmPassword: string,
+    registerInfo: {
+      name: string;
+      email: string;
+      mobile: string;
+      password: string;
+      confirmPassword: string;
+    }
   ): Promise<boolean> => {
     const { setAuthenticated } = useAuthStore.getState();
 
     const device_name = await deviceConfig.getDeviceId();
 
     const data = {
-      name,
-      mobile,
-      email,
-      password,
-      password_confirmation: confirmPassword,
+      name: registerInfo.name || '',
+      mobile: registerInfo.mobile || '',
+      email: registerInfo.email || '',
+      password: registerInfo.password || '',
+      password_confirmation: registerInfo.confirmPassword || '',
       device_name,
     };
 
+    console.log('registerInfo: ', registerInfo);
+
     try {
-      const response = await axios.post(`${API_BASE_URL + API_ENDPOINTS.REGISTER}`, data,);
-
+      const response = await axios.post(`${API_BASE_URL + API_ENDPOINTS.REGISTER}`,
+        data
+      );
       const token = response.data.token;
-
       await TokenService.saveToken(token);
-
       setAuthenticated(true);
-
       return true;
-
     } catch (error) {
-
       console.error('Registration failed:', error);
-
       setAuthenticated(false);
-
       return false;
     }
   },
 
-  login: async (email: string, password: string): Promise<boolean> => {
+  login: async (loginInfo: { email: string; password: string }): Promise<boolean> => {
     const { setAuthenticated } = useAuthStore.getState();
 
     try {
       const device_name = await deviceConfig.getDeviceId();
-      const response = await axios.post(`${API_BASE_URL + API_ENDPOINTS.LOGIN}`, { email, password, device_name },);
+      const data = {
+        email: loginInfo.email || '',
+        password: loginInfo.password || '',
+        device_name,
+      };
+
+      const response = await axios.post(`${API_BASE_URL + API_ENDPOINTS.LOGIN}`, data,);
       const token = response.data.token;
       await TokenService.saveToken(token);
       setAuthenticated(true);

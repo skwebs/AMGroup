@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
-  Platform,
   ActivityIndicator,
   TouchableWithoutFeedback,
   TouchableOpacity,
@@ -17,10 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import MIcon from 'react-native-vector-icons/MaterialIcons';
 
 import useAuthStore from '../../store/authStore';
-import { API_URL } from '../../utils/config';
 import { ROUTES } from '../../constants/route';
-import { API_ENDPOINTS } from '../../constants/apiEndpoints';
-import FormTextInput from '../../components/common/FormTextInput';
 import AuthService from '../../services/auth';
 
 // Validation schema with Zod
@@ -30,28 +26,26 @@ const loginSchema = z.object({
 });
 
 const LoginScreen = () => {
-  const { setToken } = useAuthStore();
+  useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false); // Loading state
   const [snackbarVisible, setSnackbarVisible] = useState(false); // Snackbar visibility
-  const [snackbarMessage, setSnackbarMessage] = useState(''); // Snackbar message
+  const [snackbarMessage] = useState(''); // Snackbar message
   const navigation = useNavigation();
 
   const {
     control,
     handleSubmit,
-    setValue,
-    trigger,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async data => {
-
+    console.log('login form data: ', data);
     try {
       setLoading(true); // Start loading
-      await AuthService.login(data.email, data.password);
+      await AuthService.login(data);
     } catch (error) {
       console.error('Error:', error);
     } finally {
