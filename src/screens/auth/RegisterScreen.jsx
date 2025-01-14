@@ -11,7 +11,7 @@ import { TextInput, Text, Snackbar } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import MIcon from 'react-native-vector-icons/MaterialIcons';
 import AuthService from '../../services/auth';
 import { ROUTES } from '../../constants/route';
@@ -32,21 +32,33 @@ const registerSchema = z
   });
 
 const RegisterScreen = () => {
+  const [loading, setLoading] = useState(false);
+  const [serverErrors, setServerErrors] = useState({});
+  const [snackbarMessage, setSnackbarMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [serverErrors, setServerErrors] = useState({});
   const navigation = useNavigation();
 
   const {
     control,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm({
     resolver: zodResolver(registerSchema),
   });
+
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        // Cleanup when screen loses focus
+        setServerErrors({});
+        setSnackbarMessage('');
+        reset();
+      };
+    }, [reset])
+  );
 
   const onSubmit = async data => {
     setServerErrors({});
@@ -73,7 +85,7 @@ const RegisterScreen = () => {
 
   return (
     <View style={styles.container}>
-      <MIcon style={styles.icon} name="person-add" size={90} color="#aaa" />
+      {/* <MIcon style={styles.icon} name="person-add" size={90} color="#aaa" /> */}
       <Text style={styles.title}>Register</Text>
 
       {/* Name Input */}
@@ -83,7 +95,7 @@ const RegisterScreen = () => {
         render={({ field: { onChange, onBlur, value } }) => (
           <View style={styles.inputContainer}>
             <TextInput
-              style={[styles.input, (!!errors.name || !!serverErrors.name) && styles.inputError]}
+
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
@@ -107,7 +119,7 @@ const RegisterScreen = () => {
         render={({ field: { onChange, onBlur, value } }) => (
           <View style={styles.inputContainer}>
             <TextInput
-              style={[styles.input, (!!errors.email || !!serverErrors.email) && styles.inputError]}
+
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
@@ -286,6 +298,16 @@ const styles = StyleSheet.create({
   },
   snackbar: {
     backgroundColor: '#6200ee',
+  },
+  input: {
+    height: 50,
+    backgroundColor: '#fff',
+    borderColor: '#ccc',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+  },
+  inputError: {
+    borderColor: 'red',
   },
 });
 

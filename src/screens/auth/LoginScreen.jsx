@@ -12,7 +12,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 // import axios from 'axios';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import MIcon from 'react-native-vector-icons/MaterialIcons';
 
 import useAuthStore from '../../store/authStore';
@@ -27,20 +27,31 @@ const loginSchema = z.object({
 
 const LoginScreen = () => {
   useAuthStore();
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false); // Loading state
-  const [snackbarVisible, setSnackbarVisible] = useState(false); // Snackbar visibility
-  const [snackbarMessage, setSnackbarMessage] = useState(''); // Snackbar message
   const [serverErrors, setServerErrors] = useState({}); // Server errors
+  const [snackbarMessage, setSnackbarMessage] = useState(''); // Snackbar message
+  const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
 
   const {
     control,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm({
     resolver: zodResolver(loginSchema),
   });
+
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        // Cleanup when screen loses focus
+        setServerErrors({});
+        setSnackbarMessage('');
+        reset();
+      };
+    }, [reset])
+  );
 
   const onSubmit = async data => {
     setServerErrors({});
@@ -65,9 +76,11 @@ const LoginScreen = () => {
     }
   };
 
+  const [snackbarVisible, setSnackbarVisible] = useState(false); // Snackbar visibility
+
   return (
     <View style={styles.container}>
-      <MIcon style={styles.icon} name="security" size={90} color="#aaa" />
+      {/* <MIcon style={styles.icon} name="security" size={90} color="#aaa" /> */}
       <Text style={styles.title}>Login</Text>
 
       {/* Email Input */}
@@ -230,7 +243,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   inputContainer: {
-    marginBottom: 10,
+    marginBottom: 15,
   },
 });
 
